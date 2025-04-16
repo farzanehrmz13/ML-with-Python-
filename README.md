@@ -1,2 +1,2 @@
 # ML-with-Python-
-I'm gonna add some projects to this repository.
+I'm gonna add some ML with Py projects to this repository.
