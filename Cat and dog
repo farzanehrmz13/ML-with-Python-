@@ -1,0 +1,96 @@
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+import matplotlib.pyplot as plt
+import numpy as np
+
+cats_and_dogs/
+├── train/
+│   ├── cats/
+│   └── dogs/
+├── validation/
+│   ├── cats/
+│   └── dogs/
+└── test/
+
+import os
+
+base_dir = 'cats_and_dogs'
+train_dir = os.path.join(base_dir, 'train')
+validation_dir = os.path.join(base_dir, 'validation')
+test_dir = os.path.join(base_dir, 'test')
+
+train_datagen = ImageDataGenerator(rescale=1./255)
+validation_datagen = ImageDataGenerator(rescale=1./255)
+test_datagen = ImageDataGenerator(rescale=1./255)
+
+train_generator = train_datagen.flow_from_directory(
+    train_dir,
+    target_size=(128, 128),
+    batch_size=32,
+    class_mode='binary'
+)
+
+validation_generator = validation_datagen.flow_from_directory(
+    validation_dir,
+    target_size=(128, 128),
+    batch_size=32,
+    class_mode='binary'
+)
+
+# Note: The test directory should have subdirectories for each class (cats and dogs)
+test_generator = test_datagen.flow_from_directory(
+    test_dir,
+    target_size=(128, 128),
+    batch_size=32,
+    class_mode='binary'
+)
+
+model = Sequential([
+    Conv2D(32, (3,3), activation='relu', input_shape=(128, 128, 3)),
+    MaxPooling2D(2,2),
+    
+    Conv2D(64, (3,3), activation='relu'),
+    MaxPooling2D(2,2),
+    
+    Conv2D(128, (3,3), activation='relu'),
+    MaxPooling2D(2,2),
+    
+    Flatten(),
+    Dropout(0.5),
+    Dense(512, activation='relu'),
+    Dense(1, activation='sigmoid')  # Binary classification
+])
+
+model.compile(
+    loss='binary_crossentropy',
+    optimizer='adam',
+    metrics=['accuracy']
+)
+
+history = model.fit(
+    train_generator,
+    epochs=10,
+    validation_data=validation_generator
+)
+test_loss, test_acc = model.evaluate(test_generator)
+print(f"Test accuracy: {test_acc}")
+
+from tensorflow.keras.preprocessing import image
+
+# Load and preprocess the image
+img = image.load_img('path_to_image.jpg', target_size=(128, 128))
+img_array = image.img_to_array(img) / 255.0
+img_array = np.expand_dims(img_array, axis=0)
+
+# Predict
+prediction = model.predict(img_array)
+if prediction[0][0] > 0.5:
+    print("Predicted: Dog")
+else:
+    print("Predicted: Cat")
+model.save('cat_dog_classifier.h5')
+
+
+
